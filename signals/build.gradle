@@ -1,0 +1,36 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath("com.bmuschko:gradle-docker-plugin:3.0.8")
+   }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'pl.epoint.dockerlab.signals.SignalHandlingApplication',
+        )
+    }
+}
+
+apply plugin: 'com.bmuschko.docker-java-application'
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+task createDockerFile(type: Dockerfile) {
+    destFile = project.file("build/Dockerfile")
+    from "java:8u111-jdk"
+    copyFile('libs/signals.jar', 'signals.jar')
+    entryPoint("java", "-jar", "signals.jar")
+}
+
+task buildImage(type: DockerBuildImage) {
+   dependsOn createDockerFile
+   inputDir = createDockerFile.destFile.parentFile
+   tag = 'stacja.it/signals'
+}
+

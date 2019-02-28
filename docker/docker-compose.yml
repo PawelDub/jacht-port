@@ -1,0 +1,64 @@
+version: '2'
+services:
+  apache:
+    image: localhost:5000/yacht-apache
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+  
+  yacht-portal:
+    image: localhost:5000/yacht-portal:0.0.1
+    ports:
+      - "8080:8080"
+    restart: always
+
+  db:
+    image: postgres:9.6
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: charters
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - db-data:/var/lib/postgresql/data
+#       - /home/kmurawski/data/postgres:/var/lib/postgresql/data
+    restart: always
+
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+
+  portainer:
+    image: portainer/portainer
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+
+  influxdb:
+    image: influxdb
+    restart: always
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+ 
+  telegraf:
+    image: telegraf:alpine
+    restart: always
+    volumes:
+      - $PWD/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000 
+    restart: always 
+
+volumes:
+   db-data:
+   influxdb-data:

@@ -1,0 +1,56 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.4.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("com.bmuschko:gradle-docker-plugin:3.0.8")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile 'org.springframework.boot:spring-boot-starter-web'
+	compile "org.springframework.boot:spring-boot-starter-data-jpa"
+
+	compile 'org.projectlombok:lombok:1.16.16'
+
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+    compile 'org.jolokia:jolokia-core'
+
+
+	runtime('org.postgresql:postgresql')
+
+	testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+
+apply plugin: 'com.bmuschko.docker-java-application'
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+task createDockerFile(type: Dockerfile) {
+	destFile = project.file("build/Dockerfile")
+	from "java:8u111-jdk"
+	copyFile('libs/yacht-portal.jar', 'yacht-portal.jar')
+	exposePort 8080
+	entryPoint("java", "-jar", "yacht-portal.jar")
+}
+
+task buildImage(type: DockerBuildImage) {
+	dependsOn createDockerFile
+	inputDir = createDockerFile.destFile.parentFile
+	tag = 'yacht-portal'
+}
